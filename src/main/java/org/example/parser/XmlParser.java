@@ -1,94 +1,126 @@
 package org.example.parser;
 
 import org.example.model.*;
-import org.w3c.dom.*;
 
-import javax.xml.parsers.*;
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
 import java.io.*;
+import java.util.*;
 
 public class XmlParser implements Parser {
 
     @Override
-    public Mission parse(String content) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new ByteArrayInputStream(content.getBytes()));
-            Element root = doc.getDocumentElement();
+    public Mission parse(String content) throws Exception {
+        Mission mission = new Mission();
+        Curse curse = null;
+        Sorcerer sorcerer = null;
+        Technique technique = null;
+        List<Sorcerer> sorcerers = new ArrayList<>();
+        List<Technique> techniques = new ArrayList<>();
+        String currentElement = "";
 
-            Mission mission = new Mission();
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        XMLEventReader reader = factory.createXMLEventReader(new StringReader(content));
 
-            mission.setMissionId(getText(root, "missionId"));
-            mission.setDate(getText(root, "date"));
-            mission.setLocation(getText(root, "location"));
-            mission.setDamageCost(getInt(root, "damageCost"));
+        while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent();
 
-            String outcome = getText(root, "outcome");
-            if (outcome.equals("SUCCESS")) {
-                mission.setOutcome(MissionOutcome.SUCCESS);
-            } else {
-                mission.setOutcome(MissionOutcome.FAILURE);
-            }
+            if (event.isStartElement()) {
+                StartElement startElement = event.asStartElement();
+                currentElement = startElement.getName().getLocalPart();
 
-            mission.setComment(getText(root, "comment"));
+                if (currentElement.equals("sorcerer")) {
+                    sorcerer = new Sorcerer();
+                } else if (currentElement.equals("technique")) {
+                    technique = new Technique();
+                } else if (currentElement.equals("curse")) {
+                    curse = new Curse();
+                }
 
-            Element curseElem = getElement(root, "curse");
-            if (curseElem != null) {
-                Curse curse = new Curse();
-                curse.setName(getText(curseElem, "name"));
-                curse.setThreatLevel(getText(curseElem, "threatLevel"));
-                mission.setCurse(curse);
-            }
+            } else if (event.isCharacters()) {
+                Characters characters = event.asCharacters();
+                String data = characters.getData().trim();
 
-            Element sorcerersElem = getElement(root, "sorcerers");
-            if (sorcerersElem != null) {
-                NodeList nodes = sorcerersElem.getElementsByTagName("sorcerer");
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Element e = (Element) nodes.item(i);
-                    Sorcerer sorcerer = new Sorcerer();
-                    sorcerer.setName(getText(e, "name"));
-                    sorcerer.setRank(getText(e, "rank"));
-                    mission.getSorcerers().add(sorcerer);
+                if (data.isEmpty()) continue;
+
+                switch (currentElement) {
+                    case "missionId":
+                        mission.setMissionId(data);
+                        break;
+                    case "date":
+                        mission.setDate(data);
+                        break;
+                    case "location":
+                        mission.setLocation(data);
+                        break;
+                    case "damageCost":
+                        mission.setDamageCost(Integer.parseInt(data));
+                        break;
+                    case "outcome":
+                        if ("SUCCESS".equals(data)) {
+                            mission.setOutcome(MissionOutcome.SUCCESS);
+                        } else {
+                            mission.setOutcome(MissionOutcome.FAILURE);
+                        }
+                        break;
+                    case "comment":
+                        mission.setComment(data);
+                        break;
+                    case "name":
+                        if (curse != null) {
+                            curse.setName(data);
+                        } else if (technique != null) {
+                            technique.setName(data);
+                        }
+                        break;
+                    case "threatLevel":
+                        if (curse != null) {
+                            curse.setThreatLevel(data);
+                        }
+                        break;
+                    case "rank":
+                        if (sorcerer != null) {
+                            sorcerer.setRank(data);
+                        }
+                        break;
+                    case "type":
+                        if (technique != null) {
+                            technique.setType(data);
+                        }
+                        break;
+                    case "owner":
+                        if (technique != null) {
+                            technique.setOwner(data);
+                        }
+                        break;
+                    case "damage":
+                        if (technique != null) {
+                            technique.setDamage(Integer.parseInt(data));
+                        }
+                        break;
+                }
+
+            } else if (event.isEndElement()) {
+                EndElement endElement = event.asEndElement();
+                String localName = endElement.getName().getLocalPart();
+
+                if (localName.equals("sorcerer") && sorcerer != null) {
+                    sorcerers.add(sorcerer);
+                    sorcerer = null;
+                } else if (localName.equals("technique") && technique != null) {
+                    techniques.add(technique);
+                    technique = null;
+                } else if (localName.equals("curse") && curse != null) {
+                    mission.setCurse(curse);
+                    curse = null;
                 }
             }
-
-            Element techniquesElem = getElement(root, "techniques");
-            if (techniquesElem != null) {
-                NodeList nodes = techniquesElem.getElementsByTagName("technique");
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Element e = (Element) nodes.item(i);
-                    Technique technique = new Technique();
-                    technique.setName(getText(e, "name"));
-                    technique.setType(getText(e, "type"));
-                    technique.setOwner(getText(e, "owner"));
-                    technique.setDamage(getInt(e, "damage"));
-                    mission.getTechniques().add(technique);
-                }
-            }
-
-            return mission;
-
-        } catch (Exception e) {
-            throw new RuntimeException("XML parsing error", e);
         }
-    }
 
-    private Element getElement(Element parent, String tagName) {
-        NodeList nodes = parent.getElementsByTagName(tagName);
-        return nodes.getLength() > 0 ? (Element) nodes.item(0) : null;
-    }
+        mission.setSorcerers(sorcerers);
+        mission.setTechniques(techniques);
 
-    private String getText(Element parent, String tagName) {
-        Element elem = getElement(parent, tagName);
-        if (elem == null || elem.getFirstChild() == null) return "";
-        return elem.getFirstChild().getTextContent();
-    }
-
-    private int getInt(Element parent, String tagName) {
-        try {
-            return Integer.parseInt(getText(parent, tagName));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        reader.close();
+        return mission;
     }
 }
