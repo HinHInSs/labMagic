@@ -4,10 +4,11 @@ import org.example.model.Mission;
 import org.example.parser.Parser;
 import org.example.parser.ParserFabric;
 import org.example.service.ReportService;
+import org.example.datasource.DataSource;
+import org.example.datasource.FileDataSource;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -60,8 +61,12 @@ public class GUI extends JFrame {
             statusLabel.setText("Файл: " + filePath.getFileName());
 
             try {
-                String content = Files.readString(filePath);
-                Parser parser = ParserFabric.getParser(filePath);
+                DataSource source = new FileDataSource(filePath);
+
+                Parser parser = ParserFabric.getParser(source);
+
+                String content = source.read();
+
                 Mission mission = parser.parse(content);
 
                 ReportService reportService = new ReportService();
@@ -69,19 +74,15 @@ public class GUI extends JFrame {
 
                 textArea.setText(report);
 
-            } catch (IOException e) {
-                textArea.setText("Ошибка чтения файла: " + e.getMessage());
-                statusLabel.setText("Ошибка");
             } catch (Exception e) {
-                textArea.setText("Ошибка парсинга: " + e.getMessage());
+                textArea.setText("Ошибка: " + e.getMessage());
                 statusLabel.setText("Ошибка");
+                e.printStackTrace();
             }
         }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new GUI().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new GUI().setVisible(true));
     }
 }

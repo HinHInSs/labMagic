@@ -1,7 +1,9 @@
 package org.example.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Mission {
     private String missionId;
@@ -13,10 +15,12 @@ public class Mission {
     private List<Sorcerer> sorcerers;
     private List<Technique> techniques;
     private String comment;
+    private Map<String, Object> extensions;
 
     public Mission() {
         this.sorcerers = new ArrayList<>();
         this.techniques = new ArrayList<>();
+        this.extensions = new HashMap<>();
     }
 
     public String getMissionId() {
@@ -89,5 +93,21 @@ public class Mission {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Map<String, Object> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(Map<String, Object> extensions) {
+        this.extensions = extensions;
+    }
+
+    public void addExtension(String key, Object value) {
+        this.extensions.put(key, value);
+    }
+
+    public Object getExtension(String key) {
+        return this.extensions.get(key);
     }
 }

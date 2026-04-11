@@ -2,70 +2,74 @@ package org.example.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.model.*;
+import org.example.model.MissionBuilder;
+import org.example.model.MissionOutcome;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class JsonParser implements Parser {
+public class JsonParser extends BaseParser {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public Mission parse(String content) throws Exception {
-        Mission mission = new Mission();
+    protected void parseContent(String content, MissionBuilder builder) throws Exception {
         JsonNode root = mapper.readTree(content);
 
-        mission.setMissionId(root.get("missionId").asText());
-        mission.setDate(root.get("date").asText());
-        mission.setLocation(root.get("location").asText());
-        mission.setDamageCost(root.get("damageCost").asInt());
+        builder.setMissionId(root.get("missionId").asText());
+        builder.setDate(root.get("date").asText());
+        builder.setLocation(root.get("location").asText());
 
-        String outcome = root.get("outcome").asText();
-        if ("SUCCESS".equals(outcome)) {
-            mission.setOutcome(MissionOutcome.SUCCESS);
-        } else {
-            mission.setOutcome(MissionOutcome.FAILURE);
+        if (root.has("damageCost")) {
+            builder.setDamageCost(root.get("damageCost").asInt());
         }
 
-        if (root.has("comment")) {
-            mission.setComment(root.get("comment").asText());
+        String outcome = root.get("outcome").asText();
+        switch (outcome) {
+            case "SUCCESS":
+                builder.setOutcome(MissionOutcome.SUCCESS);
+                break;
+            case "PARTIAL_SUCCESS":
+                builder.setOutcome(MissionOutcome.PARTIAL_SUCCESS);
+                break;
+            default:
+                builder.setOutcome(MissionOutcome.FAILURE);
+                break;
         }
 
         JsonNode curseNode = root.get("curse");
         if (curseNode != null) {
-            Curse curse = new Curse();
-            curse.setName(curseNode.get("name").asText());
-            curse.setThreatLevel(curseNode.get("threatLevel").asText());
-            mission.setCurse(curse);
+            if (curseNode.has("name")) {
+                builder.setCurseName(curseNode.get("name").asText());
+            }
+            if (curseNode.has("threatLevel")) {
+                builder.setCurseThreatLevel(curseNode.get("threatLevel").asText());
+            }
+        }
+
+        if (root.has("comment")) {
+            builder.setComment(root.get("comment").asText());
         }
 
         JsonNode sorcerersNode = root.get("sorcerers");
         if (sorcerersNode != null && sorcerersNode.isArray()) {
-            List<Sorcerer> sorcerers = new ArrayList<>();
             for (JsonNode s : sorcerersNode) {
-                Sorcerer sorcerer = new Sorcerer();
-                sorcerer.setName(s.get("name").asText());
-                sorcerer.setRank(s.get("rank").asText());
-                sorcerers.add(sorcerer);
+                String name = s.has("name") ? s.get("name").asText() : null;
+                String rank = s.has("rank") ? s.get("rank").asText() : null;
+                if (name != null && rank != null) {
+                    builder.setSorcerer(name, rank);
+                }
             }
-            mission.setSorcerers(sorcerers);
         }
 
         JsonNode techniquesNode = root.get("techniques");
         if (techniquesNode != null && techniquesNode.isArray()) {
-            List<Technique> techniques = new ArrayList<>();
             for (JsonNode t : techniquesNode) {
-                Technique technique = new Technique();
-                technique.setName(t.get("name").asText());
-                technique.setType(t.get("type").asText());
-                technique.setOwner(t.get("owner").asText());
-                technique.setDamage(t.get("damage").asInt());
-                techniques.add(technique);
+                String name = t.has("name") ? t.get("name").asText() : null;
+                String type = t.has("type") ? t.get("type").asText() : null;
+                String owner = t.has("owner") ? t.get("owner").asText() : null;
+                int damage = t.has("damage") ? t.get("damage").asInt() : 0;
+                if (name != null && type != null && owner != null) {
+                    builder.setTechnique(name, type, owner, damage);
+                }
             }
-            mission.setTechniques(techniques);
         }
-
-        return mission;
     }
 }

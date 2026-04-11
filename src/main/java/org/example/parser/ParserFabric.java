@@ -1,23 +1,43 @@
+// ParserFabric.java
 package org.example.parser;
 
-import java.nio.file.Path;
+import org.example.datasource.DataSource;
 
 public class ParserFabric {
 
-    public static Parser getParser(Path filePath) {
-        String fileName = filePath.getFileName().toString();
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+    public static Parser getParser(DataSource source) throws Exception {
+        String content = source.read();
+        String identifier = source.getIdentifier();
 
-        if (extension.equals("txt")) {
-            return new TxtParser();
-        }
-        if (extension.equals("json")) {
+        if (identifier.equals("json")) {
             return new JsonParser();
         }
-        if (extension.equals("xml")) {
+        if (identifier.equals("xml")) {
             return new XmlParser();
         }
+        if (identifier.equals("txt")) {
+            return new TxtParser();
+        }
+        if (identifier.equals("yaml") || identifier.equals("yml")) {
+            return new YamlParser();
+        }
 
-        throw new IllegalArgumentException("Формат не поддерживается: " + extension);
+        if (content.contains("|") && content.contains("MISSION_CREATED")) {
+            return new PipeParser();
+        }
+        if (content.trim().startsWith("{")) {
+            return new JsonParser();
+        }
+        if (content.trim().startsWith("<")) {
+            return new XmlParser();
+        }
+        if (content.contains("[") && content.contains("]") && content.contains("=")) {
+            return new TxtParser();
+        }
+        if (content.contains(":") && !content.contains("=")) {
+            return new YamlParser();
+        }
+
+        throw new IllegalArgumentException("Не удалось определить формат данных");
     }
 }
