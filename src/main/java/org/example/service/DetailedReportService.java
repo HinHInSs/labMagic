@@ -81,12 +81,12 @@ public class DetailedReportService implements ReportGenerator {
         }
 
         if (mission.getComment() != null && !mission.getComment().isEmpty()) {
-            sb.append("\n[6] КОММЕНТАРИЙ\n");
+            sb.append("\nКОММЕНТАРИЙ\n");
             sb.append("  ").append(mission.getComment()).append("\n");
         }
 
         if (mission.getExtensions() != null && !mission.getExtensions().isEmpty()) {
-            sb.append("\n[7] ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ\n");
+            sb.append("\nДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ\n");
 
             for (Map.Entry<String, Object> entry : mission.getExtensions().entrySet()) {
                 String key = entry.getKey();
@@ -104,13 +104,13 @@ public class DetailedReportService implements ReportGenerator {
                     for (int i = 0; i < list.size(); i++) {
                         Object item = list.get(i);
                         if (item instanceof Map) {
-                            sb.append("    ").append(i + 1).append(".\n");
                             Map<?, ?> map = (Map<?, ?>) item;
                             for (Map.Entry<?, ?> me : map.entrySet()) {
-                                sb.append("       ").append(me.getKey()).append(": ").append(me.getValue()).append("\n");
+                                sb.append("    ").append(me.getKey()).append(": ").append(me.getValue()).append("\n");
                             }
                         } else {
-                            sb.append("    ").append(i + 1).append(". ").append(item).append("\n");
+                            String itemStr = item.toString();
+                            sb.append("    ").append("- ").append(itemStr).append("\n");
                         }
                     }
                 } else {

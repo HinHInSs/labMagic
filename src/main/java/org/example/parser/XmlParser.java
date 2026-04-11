@@ -84,16 +84,36 @@ public class XmlParser extends BaseParser {
                     } else {
                         switch (currentElement) {
                             case "behaviorType":
-                                currentEnemyActivity.put("Тип поведения", data);
+                                String behavior = data;
+                                switch (behavior) {
+                                    case "AMBUSH_PREDATOR": behavior = "ЗАСАДА-ХИЩНИК"; break;
+                                }
+                                currentEnemyActivity.put("Тип поведения", behavior);
                                 break;
                             case "targetPriority":
-                                currentEnemyActivity.put("Приоритет целей", data);
+                                String target = data;
+                                switch (target) {
+                                    case "ISOLATED_HUMANS": target = "ИЗОЛИРОВАННЫЕ ЛЮДИ"; break;
+                                }
+                                currentEnemyActivity.put("Приоритет целей", target);
                                 break;
                             case "mobility":
-                                currentEnemyActivity.put("Мобильность", data);
+                                String mobility = data;
+                                switch (mobility) {
+                                    case "HIGH": mobility = "ВЫСОКАЯ"; break;
+                                    case "MEDIUM": mobility = "СРЕДНЯЯ"; break;
+                                    case "LOW": mobility = "НИЗКАЯ"; break;
+                                }
+                                currentEnemyActivity.put("Мобильность", mobility);
                                 break;
                             case "escalationRisk":
-                                currentEnemyActivity.put("Риск эскалации", data);
+                                String risk = data;
+                                switch (risk) {
+                                    case "HIGH": risk = "ВЫСОКИЙ"; break;
+                                    case "MEDIUM": risk = "СРЕДНИЙ"; break;
+                                    case "LOW": risk = "НИЗКИЙ"; break;
+                                }
+                                currentEnemyActivity.put("Риск эскалации", risk);
                                 break;
                         }
                     }
@@ -129,7 +149,14 @@ public class XmlParser extends BaseParser {
                             break;
                         case "threatLevel":
                             if (insideCurse) {
-                                builder.setCurseThreatLevel(data);
+                                String threatLevel = data;
+                                switch (threatLevel) {
+                                    case "HIGH": threatLevel = "ВЫСОКИЙ"; break;
+                                    case "MEDIUM": threatLevel = "СРЕДНИЙ"; break;
+                                    case "LOW": threatLevel = "НИЗКИЙ"; break;
+                                    case "SPECIAL_GRADE": threatLevel = "ОСОБЫЙ РАНГ"; break;
+                                }
+                                builder.setCurseThreatLevel(threatLevel);
                             }
                             break;
                         case "name":
@@ -143,12 +170,25 @@ public class XmlParser extends BaseParser {
                             break;
                         case "rank":
                             if (insideSorcerer) {
-                                currentSorcererRank = data;
+                                String rank = data;
+                                switch (rank) {
+                                    case "GRADE_1": rank = "1 РАНГ"; break;
+                                    case "GRADE_2": rank = "2 РАНГ"; break;
+                                    case "SEMI_GRADE_1": rank = "ПОЛУРАНГ 1"; break;
+                                }
+                                currentSorcererRank = rank;
                             }
                             break;
                         case "type":
                             if (insideTechnique) {
-                                currentTechniqueType = data;
+                                String type = data;
+                                switch (type) {
+                                    case "INNATE": type = "ВРОЖДЕННАЯ"; break;
+                                    case "SHIKIGAMI": type = "ШИКИГАМИ"; break;
+                                    case "WEAPON": type = "ОРУЖИЕ"; break;
+                                    case "BODY": type = "ТЕЛЕСНАЯ"; break;
+                                }
+                                currentTechniqueType = type;
                             }
                             break;
                         case "owner":

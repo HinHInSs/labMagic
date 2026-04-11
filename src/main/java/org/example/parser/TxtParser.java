@@ -70,14 +70,27 @@ public class TxtParser extends BaseParser {
                             builder.setCurseName(value);
                             break;
                         case "threatLevel":
-                            builder.setCurseThreatLevel(value);
+                            String threatLevel = value;
+                            switch (threatLevel) {
+                                case "HIGH": threatLevel = "ВЫСОКИЙ"; break;
+                                case "MEDIUM": threatLevel = "СРЕДНИЙ"; break;
+                                case "LOW": threatLevel = "НИЗКИЙ"; break;
+                                case "SPECIAL_GRADE": threatLevel = "ОСОБЫЙ РАНГ"; break;
+                            }
+                            builder.setCurseThreatLevel(threatLevel);
                             break;
                     }
                 } else if (currentSection.equals("SORCERER")) {
                     if (key.equals("name")) {
                         temp.put("name", value);
                     } else if (key.equals("rank") && temp.containsKey("name")) {
-                        builder.setSorcerer(temp.get("name"), value);
+                        String rank = value;
+                        switch (rank) {
+                            case "GRADE_1": rank = "1 РАНГ"; break;
+                            case "GRADE_2": rank = "2 РАНГ"; break;
+                            case "SEMI_GRADE_1": rank = "ПОЛУРАНГ 1"; break;
+                        }
+                        builder.setSorcerer(temp.get("name"), rank);
                         temp.remove("name");
                     }
                 } else if (currentSection.equals("TECHNIQUE")) {
@@ -86,7 +99,14 @@ public class TxtParser extends BaseParser {
                             temp.put("tech_name", value);
                             break;
                         case "type":
-                            temp.put("tech_type", value);
+                            String type = value;
+                            switch (type) {
+                                case "INNATE": type = "ВРОЖДЕННАЯ"; break;
+                                case "SHIKIGAMI": type = "ШИКИГАМИ"; break;
+                                case "WEAPON": type = "ОРУЖИЕ"; break;
+                                case "BODY": type = "ТЕЛЕСНАЯ"; break;
+                            }
+                            temp.put("tech_type", type);
                             break;
                         case "owner":
                             temp.put("tech_owner", value);
@@ -119,7 +139,13 @@ public class TxtParser extends BaseParser {
                             rusKey = key;
                             break;
                     }
-                    environmentBlock.put(rusKey, value);
+                    String rusValue = value;
+                    switch (value) {
+                        case "HEAVY_RAIN": rusValue = "СИЛЬНЫЙ ДОЖДЬ"; break;
+                        case "NIGHT": rusValue = "НОЧЬ"; break;
+                        case "LOW": rusValue = "НИЗКАЯ"; break;
+                    }
+                    environmentBlock.put(rusKey, rusValue);
                 }
             }
 

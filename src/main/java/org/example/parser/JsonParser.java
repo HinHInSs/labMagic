@@ -40,7 +40,14 @@ public class JsonParser extends BaseParser {
                 builder.setCurseName(curseNode.get("name").asText());
             }
             if (curseNode.has("threatLevel")) {
-                builder.setCurseThreatLevel(curseNode.get("threatLevel").asText());
+                String threatLevel = curseNode.get("threatLevel").asText();
+                switch (threatLevel) {
+                    case "HIGH": threatLevel = "ВЫСОКИЙ"; break;
+                    case "MEDIUM": threatLevel = "СРЕДНИЙ"; break;
+                    case "LOW": threatLevel = "НИЗКИЙ"; break;
+                    case "SPECIAL_GRADE": threatLevel = "ОСОБЫЙ РАНГ"; break;
+                }
+                builder.setCurseThreatLevel(threatLevel);
             }
         }
 
@@ -54,6 +61,11 @@ public class JsonParser extends BaseParser {
                 String name = s.has("name") ? s.get("name").asText() : null;
                 String rank = s.has("rank") ? s.get("rank").asText() : null;
                 if (name != null && rank != null) {
+                    switch (rank) {
+                        case "GRADE_1": rank = "1 РАНГ"; break;
+                        case "GRADE_2": rank = "2 РАНГ"; break;
+                        case "SEMI_GRADE_1": rank = "ПОЛУРАНГ 1"; break;
+                    }
                     builder.setSorcerer(name, rank);
                 }
             }
@@ -67,6 +79,12 @@ public class JsonParser extends BaseParser {
                 String owner = t.has("owner") ? t.get("owner").asText() : null;
                 int damage = t.has("damage") ? t.get("damage").asInt() : 0;
                 if (name != null && type != null && owner != null) {
+                    switch (type) {
+                        case "INNATE": type = "ВРОЖДЕННАЯ"; break;
+                        case "SHIKIGAMI": type = "ШИКИГАМИ"; break;
+                        case "WEAPON": type = "ОРУЖИЕ"; break;
+                        case "BODY": type = "ТЕЛЕСНАЯ"; break;
+                    }
                     builder.setTechnique(name, type, owner, damage);
                 }
             }

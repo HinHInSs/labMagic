@@ -36,21 +36,40 @@ public class PipeParser extends BaseParser {
                     case "CURSE_DETECTED":
                         if (parts.length >= 3) {
                             builder.setCurseName(parts[1].trim());
-                            builder.setCurseThreatLevel(parts[2].trim());
+                            String threatLevel = parts[2].trim();
+                            switch (threatLevel) {
+                                case "HIGH": threatLevel = "ВЫСОКИЙ"; break;
+                                case "MEDIUM": threatLevel = "СРЕДНИЙ"; break;
+                                case "LOW": threatLevel = "НИЗКИЙ"; break;
+                            }
+                            builder.setCurseThreatLevel(threatLevel);
                         }
                         break;
 
                     case "SORCERER_ASSIGNED":
                         if (parts.length >= 3) {
-                            builder.setSorcerer(parts[1].trim(), parts[2].trim());
+                            String rank = parts[2].trim();
+                            switch (rank) {
+                                case "GRADE_1": rank = "1 РАНГ"; break;
+                                case "GRADE_2": rank = "2 РАНГ"; break;
+                                case "SEMI_GRADE_1": rank = "ПОЛУРАНГ 1"; break;
+                            }
+                            builder.setSorcerer(parts[1].trim(), rank);
                         }
                         break;
 
                     case "TECHNIQUE_USED":
                         if (parts.length >= 5) {
+                            String type = parts[2].trim();
+                            switch (type) {
+                                case "INNATE": type = "ВРОЖДЕННАЯ"; break;
+                                case "SHIKIGAMI": type = "ШИКИГАМИ"; break;
+                                case "WEAPON": type = "ОРУЖИЕ"; break;
+                                case "BODY": type = "ТЕЛЕСНАЯ"; break;
+                            }
                             builder.setTechnique(
                                     parts[1].trim(),
-                                    parts[2].trim(),
+                                    type,
                                     parts[3].trim(),
                                     Integer.parseInt(parts[4].trim())
                             );
@@ -87,7 +106,13 @@ public class PipeParser extends BaseParser {
                         if (parts.length >= 4) {
                             Map<String, String> event = new HashMap<>();
                             event.put("Время", parts[1].trim());
-                            event.put("Тип", parts[2].trim());
+                            String type = parts[2].trim();
+                            switch (type) {
+                                case "DETECTION": type = "ОБНАРУЖЕНИЕ"; break;
+                                case "ENGAGEMENT": type = "СТОЛКНОВЕНИЕ"; break;
+                                case "CIVILIAN_EVACUATION": type = "ЭВАКУАЦИЯ ГРАЖДАНСКИХ"; break;
+                            }
+                            event.put("Тип", type);
                             event.put("Описание", parts[3].trim());
                             builder.addToList("События по времени", event);
                         }
@@ -96,7 +121,12 @@ public class PipeParser extends BaseParser {
                     case "ENEMY_ACTION":
                         if (parts.length >= 3) {
                             Map<String, String> action = new HashMap<>();
-                            action.put("Тип", parts[1].trim());
+                            String type = parts[1].trim();
+                            switch (type) {
+                                case "DIRECT_ASSAULT": type = "ПРЯМАЯ АТАКА"; break;
+                                case "TRAP_USAGE": type = "ИСПОЛЬЗОВАНИЕ ЛОВУШКИ"; break;
+                            }
+                            action.put("Тип", type);
                             action.put("Описание", parts[2].trim());
                             builder.addToList("Действия противника", action);
                         }

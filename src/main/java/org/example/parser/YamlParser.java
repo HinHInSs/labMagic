@@ -52,7 +52,14 @@ public class YamlParser extends BaseParser {
                 builder.setCurseName(curse.get("name"));
             }
             if (curse.containsKey("threatLevel")) {
-                builder.setCurseThreatLevel(curse.get("threatLevel"));
+                String threatLevel = curse.get("threatLevel");
+                switch (threatLevel) {
+                    case "HIGH": threatLevel = "ВЫСОКИЙ"; break;
+                    case "MEDIUM": threatLevel = "СРЕДНИЙ"; break;
+                    case "LOW": threatLevel = "НИЗКИЙ"; break;
+                    case "SPECIAL_GRADE": threatLevel = "ОСОБЫЙ РАНГ"; break;
+                }
+                builder.setCurseThreatLevel(threatLevel);
             }
         }
 
@@ -66,6 +73,11 @@ public class YamlParser extends BaseParser {
                 String name = s.get("name");
                 String rank = s.get("rank");
                 if (name != null && rank != null) {
+                    switch (rank) {
+                        case "GRADE_1": rank = "1 РАНГ"; break;
+                        case "GRADE_2": rank = "2 РАНГ"; break;
+                        case "SEMI_GRADE_1": rank = "ПОЛУРАНГ 1"; break;
+                    }
                     builder.setSorcerer(name, rank);
                 }
             }
@@ -79,13 +91,39 @@ public class YamlParser extends BaseParser {
                 String owner = (String) t.get("owner");
                 int damage = t.containsKey("damage") ? (Integer) t.get("damage") : 0;
                 if (name != null && type != null && owner != null) {
+                    switch (type) {
+                        case "INNATE": type = "ВРОЖДЕННАЯ"; break;
+                        case "SHIKIGAMI": type = "ШИКИГАМИ"; break;
+                        case "WEAPON": type = "ОРУЖИЕ"; break;
+                        case "BODY": type = "ТЕЛЕСНАЯ"; break;
+                    }
                     builder.setTechnique(name, type, owner, damage);
                 }
             }
         }
 
         if (data.containsKey("economicAssessment")) {
-            builder.addExtension("Экономическая оценка", data.get("economicAssessment"));
+            Map<String, Object> economic = (Map<String, Object>) data.get("economicAssessment");
+            Map<String, String> rusEconomic = new java.util.HashMap<>();
+            if (economic.containsKey("totalDamageCost")) {
+                rusEconomic.put("Общий ущерб", economic.get("totalDamageCost").toString());
+            }
+            if (economic.containsKey("infrastructureDamage")) {
+                rusEconomic.put("Ущерб инфраструктуре", economic.get("infrastructureDamage").toString());
+            }
+            if (economic.containsKey("commercialDamage")) {
+                rusEconomic.put("Коммерческий ущерб", economic.get("commercialDamage").toString());
+            }
+            if (economic.containsKey("transportDamage")) {
+                rusEconomic.put("Ущерб транспорту", economic.get("transportDamage").toString());
+            }
+            if (economic.containsKey("recoveryEstimateDays")) {
+                rusEconomic.put("Дней на восстановление", economic.get("recoveryEstimateDays").toString());
+            }
+            if (economic.containsKey("insuranceCovered")) {
+                rusEconomic.put("Страховое покрытие", economic.get("insuranceCovered").toString());
+            }
+            builder.addExtension("Экономическая оценка", rusEconomic);
         }
     }
 }
