@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архив миссий</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand fw-bold">Архив миссий колледжа</span>
+        <a href="/swagger-ui.html" class="btn btn-sm btn-outline-light" target="_blank">Swagger API</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Загрузка -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">Загрузить миссию</div>
+        <div class="card-body">
+            <div class="d-flex gap-2 align-items-center">
+                <input type="file" id="fileInput" class="form-control" style="max-width:400px"
+                       >
+                <button class="btn btn-dark" onclick="uploadMission()">Загрузить</button>
+            </div>
+            <p id="status-msg" class="mt-2 mb-0 small"></p>
+        </div>
+    </div>
+
+    <!-- Архив -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span>Архив миссий</span>
+            <button class="btn btn-sm btn-outline-light" onclick="loadArchive()">Обновить</button>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Идентификатор миссии</th>
+                        <th>Дата</th>
+                        <th>Локация</th>
+                        <th>Исход</th>
+                        <th>Ущерб (¥)</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archive-tbody">
+                    <tr><td colspan="7" class="text-center text-muted py-3">Загрузка...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Отчёт -->
+    <div class="card mb-4" id="report-section" style="display:none">
+        <div class="card-header bg-dark text-white">
+            Отчёт: <span id="report-title"></span>
+        </div>
+        <div class="card-body">
+            <pre id="report-content" class="mb-0" style="white-space: pre-wrap; font-size: 0.9rem;"></pre>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API = '/api/missions';
+
+    async function uploadMission() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status-msg');
+        if (!fileInput.files.length) {
+            status.className = 'mt-2 mb-0 small text-danger';
+            status.textContent = 'Выберите файл.';
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        const resp = await fetch(API + '/upload', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (resp.ok) {
+            status.className = 'mt-2 mb-0 small text-success';
+            status.textContent = 'Сохранено: ' + data.missionId + ' (id=' + data.id + ')';
+            fileInput.value = '';
+            loadArchive();
+        } else {
+            status.className = 'mt-2 mb-0 small text-danger';
+            status.textContent = 'Ошибка: ' + (data.error || resp.statusText);
+        }
+    }
+
+    async function loadArchive() {
+        const tbody = document.getElementById('archive-tbody');
+        const resp = await fetch(API);
+        const missions = await resp.json();
+        if (!missions.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Архив пуст</td></tr>';
+            return;
+        }
+        tbody.innerHTML = missions.map(m => `
+            <tr>
+                <td>${m.id}</td>
+                <td>${m.missionId}</td>
+                <td>${m.date || '—'}</td>
+                <td>${m.location || '—'}</td>
+                <td><span class="badge ${outcomeBadge(m.outcome)}">${outcomeLabel(m.outcome)}</span></td>
+                <td>${m.damageCost ? m.damageCost.toLocaleString('ru') : '0'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="viewReport(${m.id}, '${m.missionId}')">Отчёт</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMission(${m.id})">Удалить</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function viewReport(id, missionId) {
+        const section = document.getElementById('report-section');
+        section.style.display = 'block';
+        document.getElementById('report-title').textContent = missionId;
+        document.getElementById('report-content').textContent = 'Загрузка...';
+        section.scrollIntoView({ behavior: 'smooth' });
+        const resp = await fetch(API + '/' + id + '/report');
+        document.getElementById('report-content').textContent = await resp.text();
+    }
+
+    async function deleteMission(id) {
+        if (!confirm('Удалить миссию #' + id + ' из архива?')) return;
+        const resp = await fetch(API + '/' + id, { method: 'DELETE' });
+        if (resp.ok) {
+            loadArchive();
+            document.getElementById('report-section').style.display = 'none';
+        }
+    }
+
+    function outcomeLabel(o) {
+        if (o === 'SUCCESS') return 'Успех';
+        if (o === 'PARTIAL_SUCCESS') return 'Частичный успех';
+        if (o === 'FAILURE') return 'Провал';
+        return o || '';
+    }
+
+    function outcomeBadge(o) {
+        if (o === 'SUCCESS') return 'bg-success';
+        if (o === 'PARTIAL_SUCCESS') return 'bg-warning text-dark';
+        return 'bg-danger';
+    }
+
+    loadArchive();
+</script>
+</body>
+</html>
